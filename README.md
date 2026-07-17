@@ -5,7 +5,7 @@ This folder is ready to publish with GitHub Pages.
 Files:
 
 - `index.html`: mobile-friendly landing page for the QR code
-- `aido-logo.pdf`: source PDF
+- `aido-logo.pdf`: published PDF file for the brochure
 
 Publishing steps:
 
