@@ -1,23 +1,27 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="format-detection" content="telephone=no">
   <title>AIDO e-Brochure</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #141619;
-      --panel: rgba(255, 255, 255, 0.08);
-      --text: #f2f4f7;
-      --muted: rgba(242, 244, 247, 0.68);
-      --shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
-      --edge: rgba(255, 255, 255, 0.14);
+      --bg: #111315;
+      --panel: rgba(17, 19, 21, 0.78);
+      --panel-strong: rgba(17, 19, 21, 0.92);
+      --line: rgba(255, 255, 255, 0.1);
+      --text: #f4f6f8;
+      --muted: rgba(244, 246, 248, 0.68);
+      --accent: #c99a4f;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+      --page-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
     }
 
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html,
@@ -27,8 +31,8 @@
       height: 100%;
       overflow: hidden;
       background:
-        radial-gradient(circle at top, rgba(189, 145, 72, 0.14), transparent 22%),
-        linear-gradient(180deg, #1b1d20 0%, var(--bg) 100%);
+        radial-gradient(circle at top, rgba(201, 154, 79, 0.16), transparent 22%),
+        linear-gradient(180deg, #1a1c1f 0%, var(--bg) 100%);
       color: var(--text);
       font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
     }
@@ -43,149 +47,217 @@
       position: relative;
       width: 100%;
       height: 100%;
-      padding: 12px;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 10px;
+      isolation: isolate;
+    }
+
+    .chrome {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 6;
+      transition: opacity 220ms ease, transform 220ms ease;
+      pointer-events: none;
+    }
+
+    .chrome > * {
+      pointer-events: auto;
+    }
+
+    .app.is-immersive .chrome {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    .app.is-immersive .bottom-chrome {
+      transform: translateY(12px);
+    }
+
+    .top-chrome {
+      top: 0;
+      padding: 14px 14px 0;
     }
 
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 4px 4px 0;
       gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+
+    .meta {
+      min-width: 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      font-size: 11px;
+      line-height: 1;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
     }
 
     .title {
       margin: 0;
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.25;
       font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .status {
       flex: none;
-      padding: 8px 12px;
+      padding: 9px 12px;
       border-radius: 999px;
-      background: var(--panel);
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--muted);
       font-size: 12px;
       line-height: 1;
-      color: var(--muted);
+      font-variant-numeric: tabular-nums;
     }
 
     .viewer {
-      position: relative;
-      min-height: 0;
+      position: absolute;
+      inset: 0;
       display: grid;
       place-items: center;
+      padding: 74px 12px 108px;
     }
 
-    .frame {
+    .stage {
       position: relative;
-      width: min(100%, 860px);
+      width: min(100%, 920px);
       aspect-ratio: 1440 / 984;
-      border-radius: 20px;
+      border-radius: 22px;
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #0d0f11;
       box-shadow: var(--shadow);
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--edge);
       touch-action: pan-y;
+    }
+
+    .stage::before,
+    .stage::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.02);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .stage::after {
+      inset: 32px;
+      opacity: 0.55;
     }
 
     .sheet {
       position: absolute;
       inset: 0;
+      z-index: 2;
       width: 100%;
       height: 100%;
       object-fit: contain;
-      background: #111;
+      background: #0f1114;
+      box-shadow: var(--page-shadow);
       opacity: 0;
-      transform: translateX(18px) scale(0.985);
-      transition: transform 220ms ease, opacity 220ms ease;
+      transform: scale(0.99) translateX(18px);
+      transition: transform 240ms ease, opacity 240ms ease;
       will-change: transform, opacity;
     }
 
     .sheet.is-active {
       opacity: 1;
-      transform: translateX(0) scale(1);
-      z-index: 2;
+      transform: scale(1) translateX(0);
     }
 
     .sheet.is-exit-left {
       opacity: 0;
-      transform: translateX(-12%) scale(0.985);
-      z-index: 1;
+      transform: scale(0.985) translateX(-14%);
     }
 
     .sheet.is-exit-right {
       opacity: 0;
-      transform: translateX(12%) scale(0.985);
-      z-index: 1;
+      transform: scale(0.985) translateX(14%);
     }
 
-    .hotspot {
+    .edge-button {
+      position: absolute;
+      top: 50%;
+      z-index: 4;
+      width: 46px;
+      height: 72px;
+      margin-top: -36px;
+      border: 0;
+      border-radius: 16px;
+      background: rgba(17, 19, 21, 0.42);
+      color: #fff;
+      font-size: 24px;
+      line-height: 1;
+      backdrop-filter: blur(10px);
+      transition: opacity 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .edge-button:disabled {
+      opacity: 0.22;
+    }
+
+    .edge-button:not(:disabled):active {
+      transform: scale(0.96);
+    }
+
+    .edge-button.left {
+      left: 12px;
+    }
+
+    .edge-button.right {
+      right: 12px;
+    }
+
+    .tap-zone {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 18%;
       z-index: 3;
     }
 
-    .hotspot.left {
+    .tap-zone.left {
       left: 0;
+      width: 24%;
     }
 
-    .hotspot.right {
+    .tap-zone.center {
+      left: 24%;
+      width: 52%;
+    }
+
+    .tap-zone.right {
       right: 0;
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .hint {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.4;
-      padding-left: 4px;
-    }
-
-    .actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    button {
-      appearance: none;
-      border: 0;
-      border-radius: 999px;
-      min-width: 88px;
-      height: 40px;
-      padding: 0 16px;
-      background: var(--panel);
-      color: var(--text);
-      font: inherit;
-    }
-
-    button:disabled {
-      opacity: 0.35;
+      width: 24%;
     }
 
     .loading {
       position: absolute;
-      inset: auto 50% 18px auto;
-      transform: translateX(50%);
-      z-index: 4;
+      left: 50%;
+      bottom: 18px;
+      z-index: 5;
+      transform: translateX(-50%);
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.48);
-      font-size: 12px;
+      background: rgba(0, 0, 0, 0.58);
       color: #fff;
+      font-size: 12px;
+      line-height: 1;
       opacity: 0;
       transition: opacity 180ms ease;
       pointer-events: none;
@@ -195,62 +267,196 @@
       opacity: 1;
     }
 
-    @media (max-width: 640px) {
-      .app {
-        padding: 10px 10px 14px;
+    .bottom-chrome {
+      bottom: 0;
+      padding: 0 14px 14px;
+    }
+
+    .dock {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel-strong);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .range-label,
+    .range-value {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .hint {
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chip {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 999px;
+      min-width: 82px;
+      height: 38px;
+      padding: 0 14px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .chip:disabled {
+      opacity: 0.34;
+    }
+
+    .chip.primary {
+      background: rgba(201, 154, 79, 0.16);
+      border-color: rgba(201, 154, 79, 0.28);
+      color: #fff;
+    }
+
+    @media (max-width: 720px) {
+      .viewer {
+        padding: 78px 8px 108px;
       }
 
-      .frame {
+      .stage {
+        width: 100%;
+        border-radius: 18px;
+      }
+
+      .top-chrome,
+      .bottom-chrome {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .control-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .buttons {
         width: 100%;
       }
 
-      .hint {
-        display: none;
+      .chip {
+        flex: 1 1 0;
+      }
+
+      .edge-button {
+        width: 40px;
+        height: 62px;
+        margin-top: -31px;
       }
     }
   </style>
 </head>
 <body>
-  <main class="app">
-    <header class="topbar">
-      <h1 class="title">AIDO e-Brochure</h1>
-      <div class="status" id="status">1 / 40</div>
-    </header>
+  <main class="app" id="app">
+    <div class="chrome top-chrome">
+      <div class="topbar">
+        <div class="meta">
+          <p class="eyebrow">AIDO</p>
+          <h1 class="title">AIDO e-Brochure</h1>
+        </div>
+        <div class="status" id="status">1 / 40</div>
+      </div>
+    </div>
+
     <section class="viewer">
-      <div class="frame" id="frame">
-        <img class="sheet is-active" id="currentImage" alt="Current brochure page">
+      <div class="stage" id="stage">
+        <img class="sheet is-active" id="currentImage" alt="AIDO brochure page 1">
         <img class="sheet" id="nextImage" alt="">
-        <div class="hotspot left" id="prevHotspot" aria-hidden="true"></div>
-        <div class="hotspot right" id="nextHotspot" aria-hidden="true"></div>
+        <button class="edge-button left" id="prevButton" type="button" aria-label="Previous page">&#8249;</button>
+        <button class="edge-button right" id="nextButton" type="button" aria-label="Next page">&#8250;</button>
+        <div class="tap-zone left" id="prevZone" aria-hidden="true"></div>
+        <div class="tap-zone center" id="toggleZone" aria-hidden="true"></div>
+        <div class="tap-zone right" id="nextZone" aria-hidden="true"></div>
         <div class="loading" id="loading">Loading...</div>
       </div>
     </section>
-    <footer class="nav">
-      <div class="hint">Swipe left or right to turn pages</div>
-      <div class="actions">
-        <button id="prevButton" type="button">Prev</button>
-        <button id="nextButton" type="button">Next</button>
+
+    <div class="chrome bottom-chrome">
+      <div class="dock">
+        <div class="range-row">
+          <div class="range-label">Page</div>
+          <input id="scrubber" type="range" min="1" max="40" step="1" value="1" aria-label="Page slider">
+          <div class="range-value" id="rangeValue">1 / 40</div>
+        </div>
+        <div class="control-row">
+          <div class="hint">Swipe to turn pages. Tap the middle area to hide controls.</div>
+          <div class="buttons">
+            <button class="chip" id="firstButton" type="button">First</button>
+            <button class="chip" id="lastButton" type="button">Last</button>
+            <button class="chip primary" id="pdfButton" type="button">PDF</button>
+          </div>
+        </div>
       </div>
-    </footer>
+    </div>
   </main>
+
   <script>
     const totalPages = 40;
+    const app = document.getElementById("app");
+    const stage = document.getElementById("stage");
     const statusEl = document.getElementById("status");
+    const rangeValueEl = document.getElementById("rangeValue");
+    const scrubber = document.getElementById("scrubber");
     const currentImage = document.getElementById("currentImage");
     const nextImage = document.getElementById("nextImage");
     const loadingEl = document.getElementById("loading");
     const prevButton = document.getElementById("prevButton");
     const nextButton = document.getElementById("nextButton");
-    const prevHotspot = document.getElementById("prevHotspot");
-    const nextHotspot = document.getElementById("nextHotspot");
+    const firstButton = document.getElementById("firstButton");
+    const lastButton = document.getElementById("lastButton");
+    const pdfButton = document.getElementById("pdfButton");
+    const prevZone = document.getElementById("prevZone");
+    const nextZone = document.getElementById("nextZone");
+    const toggleZone = document.getElementById("toggleZone");
+
     const cache = new Map();
     let page = 1;
     let animating = false;
     let touchStartX = 0;
     let touchStartY = 0;
+    let chromeTimer = 0;
 
     function pageSrc(n) {
       return `./mobile/page-${String(n).padStart(2, "0")}.jpg`;
+    }
+
+    function showLoading(visible) {
+      loadingEl.classList.toggle("is-visible", visible);
     }
 
     function warm(n) {
@@ -261,14 +467,14 @@
       cache.set(n, img);
     }
 
-    function setLoading(visible) {
-      loadingEl.classList.toggle("is-visible", visible);
-    }
-
-    function syncControls() {
+    function syncChrome() {
       statusEl.textContent = `${page} / ${totalPages}`;
+      rangeValueEl.textContent = `${page} / ${totalPages}`;
+      scrubber.value = String(page);
       prevButton.disabled = page === 1 || animating;
       nextButton.disabled = page === totalPages || animating;
+      firstButton.disabled = page === 1 || animating;
+      lastButton.disabled = page === totalPages || animating;
     }
 
     function primeNeighbors() {
@@ -277,23 +483,42 @@
       warm(page + 2);
     }
 
-    function commitPage(target) {
+    function keepChromeVisible() {
+      app.classList.remove("is-immersive");
+      window.clearTimeout(chromeTimer);
+      chromeTimer = window.setTimeout(() => {
+        app.classList.add("is-immersive");
+      }, 2400);
+    }
+
+    function toggleChrome() {
+      const willHide = !app.classList.contains("is-immersive");
+      app.classList.toggle("is-immersive", willHide);
+      window.clearTimeout(chromeTimer);
+      if (!willHide) {
+        keepChromeVisible();
+      }
+    }
+
+    function finish(target) {
       page = target;
       currentImage.src = pageSrc(page);
       currentImage.alt = `AIDO brochure page ${page}`;
       currentImage.className = "sheet is-active";
       nextImage.className = "sheet";
       animating = false;
-      setLoading(false);
-      syncControls();
+      showLoading(false);
+      syncChrome();
       primeNeighbors();
+      keepChromeVisible();
     }
 
     function go(target) {
       if (animating || target < 1 || target > totalPages || target === page) return;
       animating = true;
-      syncControls();
-      setLoading(true);
+      syncChrome();
+      showLoading(true);
+      keepChromeVisible();
 
       const direction = target > page ? "forward" : "backward";
       const src = pageSrc(target);
@@ -304,13 +529,14 @@
         nextImage.alt = `AIDO brochure page ${target}`;
         nextImage.className = "sheet is-active";
         currentImage.className = direction === "forward" ? "sheet is-exit-left" : "sheet is-exit-right";
-        window.setTimeout(() => commitPage(target), 220);
+        window.setTimeout(() => finish(target), 240);
       };
       loader.onerror = () => {
         animating = false;
-        setLoading(false);
-        syncControls();
+        showLoading(false);
+        syncChrome();
       };
+
       if (!cache.has(target)) {
         cache.set(target, loader);
         loader.src = src;
@@ -321,28 +547,50 @@
 
     prevButton.addEventListener("click", () => go(page - 1));
     nextButton.addEventListener("click", () => go(page + 1));
-    prevHotspot.addEventListener("click", () => go(page - 1));
-    nextHotspot.addEventListener("click", () => go(page + 1));
+    prevZone.addEventListener("click", () => go(page - 1));
+    nextZone.addEventListener("click", () => go(page + 1));
+    firstButton.addEventListener("click", () => go(1));
+    lastButton.addEventListener("click", () => go(totalPages));
+    pdfButton.addEventListener("click", () => {
+      window.location.href = "./aido-logo.pdf";
+    });
+    toggleZone.addEventListener("click", toggleChrome);
 
-    document.getElementById("frame").addEventListener("touchstart", (event) => {
+    scrubber.addEventListener("input", () => {
+      rangeValueEl.textContent = `${scrubber.value} / ${totalPages}`;
+      keepChromeVisible();
+    });
+
+    scrubber.addEventListener("change", () => {
+      go(Number(scrubber.value));
+    });
+
+    stage.addEventListener("touchstart", (event) => {
       const touch = event.changedTouches[0];
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
+      keepChromeVisible();
     }, { passive: true });
 
-    document.getElementById("frame").addEventListener("touchend", (event) => {
+    stage.addEventListener("touchend", (event) => {
       const touch = event.changedTouches[0];
       const dx = touch.clientX - touchStartX;
       const dy = touch.clientY - touchStartY;
-      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      if (Math.abs(dx) < 38 || Math.abs(dx) < Math.abs(dy)) return;
       if (dx < 0) go(page + 1);
       if (dx > 0) go(page - 1);
     }, { passive: true });
 
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") go(page - 1);
+      if (event.key === "ArrowRight") go(page + 1);
+    });
+
     currentImage.src = pageSrc(1);
     currentImage.alt = "AIDO brochure page 1";
-    syncControls();
+    syncChrome();
     primeNeighbors();
+    keepChromeVisible();
   </script>
 </body>
 </html>
