@@ -1,27 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="format-detection" content="telephone=no">
-  <title>AIDO e-Brochure</title>
+  <title>爱多电子画册</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #111315;
-      --panel: rgba(17, 19, 21, 0.78);
-      --panel-strong: rgba(17, 19, 21, 0.92);
+      --bg: #0f1113;
+      --panel: rgba(17, 19, 22, 0.8);
+      --panel-strong: rgba(17, 19, 22, 0.94);
       --line: rgba(255, 255, 255, 0.1);
-      --text: #f4f6f8;
-      --muted: rgba(244, 246, 248, 0.68);
-      --accent: #c99a4f;
-      --shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
-      --page-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      --text: #f3f4f6;
+      --muted: rgba(243, 244, 246, 0.66);
+      --accent: #c9994f;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
     }
 
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
     html,
@@ -31,16 +31,14 @@
       height: 100%;
       overflow: hidden;
       background:
-        radial-gradient(circle at top, rgba(201, 154, 79, 0.16), transparent 22%),
-        linear-gradient(180deg, #1a1c1f 0%, var(--bg) 100%);
+        radial-gradient(circle at top, rgba(201, 153, 79, 0.14), transparent 22%),
+        linear-gradient(180deg, #17191c 0%, var(--bg) 100%);
       color: var(--text);
       font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
     }
 
     body {
       display: flex;
-      align-items: stretch;
-      justify-content: stretch;
     }
 
     .app {
@@ -54,27 +52,21 @@
       position: absolute;
       left: 0;
       right: 0;
-      z-index: 6;
-      transition: opacity 220ms ease, transform 220ms ease;
-      pointer-events: none;
+      z-index: 8;
+      transition: opacity 180ms ease, transform 180ms ease;
     }
 
-    .chrome > * {
-      pointer-events: auto;
-    }
-
-    .app.is-immersive .chrome {
+    .app.is-immersive .chrome,
+    .app.is-immersive .nav-button,
+    .app.is-immersive .panel {
       opacity: 0;
-      transform: translateY(-10px);
+      pointer-events: none;
+      transform: translateY(10px);
     }
 
-    .app.is-immersive .bottom-chrome {
-      transform: translateY(12px);
-    }
-
-    .top-chrome {
+    .topbar-wrap {
       top: 0;
-      padding: 14px 14px 0;
+      padding: 12px 12px 0;
     }
 
     .topbar {
@@ -113,14 +105,13 @@
       text-overflow: ellipsis;
     }
 
-    .status {
+    .badge {
       flex: none;
-      padding: 9px 12px;
+      padding: 8px 12px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.07);
-      color: var(--muted);
       font-size: 12px;
-      line-height: 1;
+      color: var(--muted);
       font-variant-numeric: tabular-nums;
     }
 
@@ -129,172 +120,222 @@
       inset: 0;
       display: grid;
       place-items: center;
-      padding: 74px 12px 108px;
+      padding: 72px 10px 86px;
+      transition: padding 180ms ease;
+    }
+
+    .app.is-immersive .viewer {
+      padding: 0;
     }
 
     .stage {
       position: relative;
-      width: min(100%, 920px);
-      aspect-ratio: 1440 / 984;
+      width: min(100%, 980px);
+      height: min(calc(100vh - 158px), calc(100vw * 0.684));
+      min-height: 320px;
       border-radius: 22px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: #0d0f11;
+      background: #0b0d10;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: var(--shadow);
-      touch-action: pan-y;
+      transition: width 180ms ease, height 180ms ease, border-radius 180ms ease;
     }
 
-    .stage::before,
-    .stage::after {
-      content: "";
-      position: absolute;
-      inset: 18px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.03);
-      background: rgba(255, 255, 255, 0.02);
-      z-index: 0;
-      pointer-events: none;
+    .app.is-immersive .stage {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      border: 0;
     }
 
-    .stage::after {
-      inset: 32px;
-      opacity: 0.55;
-    }
-
-    .sheet {
+    .viewport {
       position: absolute;
       inset: 0;
-      z-index: 2;
+      overflow: hidden;
+      touch-action: none;
+      background: #0d0f12;
+    }
+
+    .page-image {
+      position: absolute;
+      left: 50%;
+      top: 50%;
       width: 100%;
       height: 100%;
       object-fit: contain;
-      background: #0f1114;
-      box-shadow: var(--page-shadow);
+      transform:
+        translate(calc(-50% + var(--pan-x, 0px)), calc(-50% + var(--pan-y, 0px)))
+        scale(var(--zoom, 1));
+      transform-origin: center center;
       opacity: 0;
-      transform: scale(0.99) translateX(18px);
-      transition: transform 240ms ease, opacity 240ms ease;
+      transition: opacity 180ms ease;
       will-change: transform, opacity;
+      pointer-events: none;
     }
 
-    .sheet.is-active {
+    .page-image.is-visible {
       opacity: 1;
-      transform: scale(1) translateX(0);
     }
 
-    .sheet.is-exit-left {
-      opacity: 0;
-      transform: scale(0.985) translateX(-14%);
+    .page-image.is-dragging {
+      transition: opacity 180ms ease;
     }
 
-    .sheet.is-exit-right {
-      opacity: 0;
-      transform: scale(0.985) translateX(14%);
-    }
-
-    .edge-button {
+    .nav-button {
       position: absolute;
       top: 50%;
-      z-index: 4;
-      width: 46px;
-      height: 72px;
-      margin-top: -36px;
+      z-index: 6;
+      width: 42px;
+      height: 64px;
+      margin-top: -32px;
       border: 0;
       border-radius: 16px;
-      background: rgba(17, 19, 21, 0.42);
+      background: rgba(17, 19, 22, 0.42);
       color: #fff;
       font-size: 24px;
-      line-height: 1;
       backdrop-filter: blur(10px);
-      transition: opacity 180ms ease, background 180ms ease, transform 180ms ease;
+      transition: opacity 180ms ease, background 180ms ease;
     }
 
-    .edge-button:disabled {
-      opacity: 0.22;
+    .nav-button:disabled {
+      opacity: 0.2;
     }
 
-    .edge-button:not(:disabled):active {
-      transform: scale(0.96);
-    }
-
-    .edge-button.left {
+    .nav-button.left {
       left: 12px;
     }
 
-    .edge-button.right {
+    .nav-button.right {
       right: 12px;
-    }
-
-    .tap-zone {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      z-index: 3;
-    }
-
-    .tap-zone.left {
-      left: 0;
-      width: 24%;
-    }
-
-    .tap-zone.center {
-      left: 24%;
-      width: 52%;
-    }
-
-    .tap-zone.right {
-      right: 0;
-      width: 24%;
     }
 
     .loading {
       position: absolute;
       left: 50%;
       bottom: 18px;
-      z-index: 5;
+      z-index: 7;
       transform: translateX(-50%);
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.58);
-      color: #fff;
+      background: rgba(0, 0, 0, 0.56);
       font-size: 12px;
-      line-height: 1;
+      color: #fff;
       opacity: 0;
-      transition: opacity 180ms ease;
       pointer-events: none;
+      transition: opacity 150ms ease;
     }
 
     .loading.is-visible {
       opacity: 1;
     }
 
-    .bottom-chrome {
+    .toolbar-wrap {
       bottom: 0;
-      padding: 0 14px 14px;
+      padding: 0 12px 12px;
     }
 
-    .dock {
-      display: grid;
-      gap: 12px;
-      padding: 14px;
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px;
       border: 1px solid var(--line);
-      border-radius: 20px;
-      background: var(--panel-strong);
+      border-radius: 18px;
+      background: var(--panel);
       backdrop-filter: blur(18px);
       box-shadow: var(--shadow);
     }
 
-    .range-row {
+    .hint {
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .tool-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      min-width: 72px;
+      height: 36px;
+      padding: 0 14px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .chip:disabled {
+      opacity: 0.3;
+    }
+
+    .chip.strong {
+      background: rgba(201, 153, 79, 0.14);
+      border-color: rgba(201, 153, 79, 0.28);
+    }
+
+    .panel {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 86px;
+      z-index: 9;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-strong);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .panel.is-open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .panel-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .slider-row {
       display: grid;
       grid-template-columns: auto 1fr auto;
       gap: 10px;
       align-items: center;
     }
 
-    .range-label,
-    .range-value {
+    .slider-row span {
       font-size: 12px;
       color: var(--muted);
-      white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
 
@@ -304,122 +345,132 @@
       accent-color: var(--accent);
     }
 
-    .control-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
       gap: 10px;
+      max-height: min(48vh, 420px);
+      overflow: auto;
+      padding-right: 2px;
     }
 
-    .hint {
-      font-size: 12px;
-      line-height: 1.35;
+    .thumb {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0;
+      color: var(--text);
+    }
+
+    .thumb.is-active {
+      border-color: rgba(201, 153, 79, 0.72);
+      box-shadow: 0 0 0 1px rgba(201, 153, 79, 0.32) inset;
+    }
+
+    .thumb img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .thumb span {
+      display: block;
+      padding: 6px 0 7px;
+      font-size: 11px;
+      text-align: center;
       color: var(--muted);
     }
 
-    .buttons {
-      display: flex;
-      gap: 8px;
-    }
-
-    .chip {
-      appearance: none;
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      border-radius: 999px;
-      min-width: 82px;
-      height: 38px;
-      padding: 0 14px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      font: inherit;
-    }
-
-    .chip:disabled {
-      opacity: 0.34;
-    }
-
-    .chip.primary {
-      background: rgba(201, 154, 79, 0.16);
-      border-color: rgba(201, 154, 79, 0.28);
-      color: #fff;
-    }
-
     @media (max-width: 720px) {
-      .viewer {
-        padding: 78px 8px 108px;
+      .hint {
+        display: none;
+      }
+
+      .toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .tool-buttons {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .toolbar-wrap,
+      .topbar-wrap,
+      .panel {
+        left: 10px;
+        right: 10px;
       }
 
       .stage {
         width: 100%;
+        height: min(calc(100vh - 154px), calc(100vw * 0.7));
         border-radius: 18px;
       }
 
-      .top-chrome,
-      .bottom-chrome {
-        padding-left: 10px;
-        padding-right: 10px;
-      }
-
-      .control-row {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .buttons {
-        width: 100%;
-      }
-
-      .chip {
-        flex: 1 1 0;
-      }
-
-      .edge-button {
-        width: 40px;
-        height: 62px;
-        margin-top: -31px;
+      .nav-button {
+        width: 38px;
+        height: 56px;
+        margin-top: -28px;
       }
     }
   </style>
 </head>
 <body>
   <main class="app" id="app">
-    <div class="chrome top-chrome">
+    <div class="chrome topbar-wrap">
       <div class="topbar">
         <div class="meta">
           <p class="eyebrow">AIDO</p>
-          <h1 class="title">AIDO e-Brochure</h1>
+          <h1 class="title">爱多电子画册</h1>
         </div>
-        <div class="status" id="status">1 / 40</div>
+        <div class="badge" id="badge">1 / 40</div>
       </div>
     </div>
 
     <section class="viewer">
       <div class="stage" id="stage">
-        <img class="sheet is-active" id="currentImage" alt="AIDO brochure page 1">
-        <img class="sheet" id="nextImage" alt="">
-        <button class="edge-button left" id="prevButton" type="button" aria-label="Previous page">&#8249;</button>
-        <button class="edge-button right" id="nextButton" type="button" aria-label="Next page">&#8250;</button>
-        <div class="tap-zone left" id="prevZone" aria-hidden="true"></div>
-        <div class="tap-zone center" id="toggleZone" aria-hidden="true"></div>
-        <div class="tap-zone right" id="nextZone" aria-hidden="true"></div>
-        <div class="loading" id="loading">Loading...</div>
+        <div class="viewport" id="viewport">
+          <img class="page-image is-visible" id="currentImage" alt="爱多电子画册第 1 页">
+          <img class="page-image" id="nextImage" alt="">
+        </div>
+        <button class="nav-button left" id="prevButton" type="button" aria-label="上一页">&#8249;</button>
+        <button class="nav-button right" id="nextButton" type="button" aria-label="下一页">&#8250;</button>
+        <div class="loading" id="loading">加载中...</div>
       </div>
     </section>
 
-    <div class="chrome bottom-chrome">
-      <div class="dock">
-        <div class="range-row">
-          <div class="range-label">Page</div>
-          <input id="scrubber" type="range" min="1" max="40" step="1" value="1" aria-label="Page slider">
-          <div class="range-value" id="rangeValue">1 / 40</div>
-        </div>
-        <div class="control-row">
-          <div class="hint">Swipe to turn pages. Tap the middle area to hide controls.</div>
-          <div class="buttons">
-            <button class="chip" id="firstButton" type="button">First</button>
-            <button class="chip" id="lastButton" type="button">Last</button>
-            <button class="chip primary" id="pdfButton" type="button">PDF</button>
-          </div>
+    <div class="panel" id="pagePanel">
+      <div class="panel-head">
+        <h2 class="panel-title">页码定位</h2>
+        <div class="panel-note" id="pagePanelNote">1 / 40</div>
+      </div>
+      <div class="slider-row">
+        <span>第 1 页</span>
+        <input id="scrubber" type="range" min="1" max="40" step="1" value="1">
+        <span id="scrubberValue">1 / 40</span>
+      </div>
+    </div>
+
+    <div class="panel" id="thumbPanel">
+      <div class="panel-head">
+        <h2 class="panel-title">缩略图</h2>
+        <div class="panel-note">点击任意页跳转</div>
+      </div>
+      <div class="thumb-grid" id="thumbGrid"></div>
+    </div>
+
+    <div class="chrome toolbar-wrap">
+      <div class="toolbar">
+        <div class="hint">点屏幕进入沉浸阅读，左右滑动翻页，放大后可拖动查看。</div>
+        <div class="tool-buttons">
+          <button class="chip" id="pageButton" type="button">页码</button>
+          <button class="chip" id="thumbButton" type="button">缩略图</button>
+          <button class="chip" id="zoomOutButton" type="button">缩小</button>
+          <button class="chip strong" id="zoomInButton" type="button">放大</button>
         </div>
       </div>
     </div>
@@ -429,34 +480,52 @@
     const totalPages = 40;
     const app = document.getElementById("app");
     const stage = document.getElementById("stage");
-    const statusEl = document.getElementById("status");
-    const rangeValueEl = document.getElementById("rangeValue");
-    const scrubber = document.getElementById("scrubber");
+    const viewport = document.getElementById("viewport");
     const currentImage = document.getElementById("currentImage");
     const nextImage = document.getElementById("nextImage");
-    const loadingEl = document.getElementById("loading");
     const prevButton = document.getElementById("prevButton");
     const nextButton = document.getElementById("nextButton");
-    const firstButton = document.getElementById("firstButton");
-    const lastButton = document.getElementById("lastButton");
-    const pdfButton = document.getElementById("pdfButton");
-    const prevZone = document.getElementById("prevZone");
-    const nextZone = document.getElementById("nextZone");
-    const toggleZone = document.getElementById("toggleZone");
+    const badge = document.getElementById("badge");
+    const loading = document.getElementById("loading");
+    const pageButton = document.getElementById("pageButton");
+    const thumbButton = document.getElementById("thumbButton");
+    const zoomInButton = document.getElementById("zoomInButton");
+    const zoomOutButton = document.getElementById("zoomOutButton");
+    const pagePanel = document.getElementById("pagePanel");
+    const thumbPanel = document.getElementById("thumbPanel");
+    const pagePanelNote = document.getElementById("pagePanelNote");
+    const scrubber = document.getElementById("scrubber");
+    const scrubberValue = document.getElementById("scrubberValue");
+    const thumbGrid = document.getElementById("thumbGrid");
 
     const cache = new Map();
     let page = 1;
     let animating = false;
-    let touchStartX = 0;
-    let touchStartY = 0;
+    let openPanel = "";
+    let zoom = 1;
+    let panX = 0;
+    let panY = 0;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let startPanX = 0;
+    let startPanY = 0;
+    let draggingZoom = false;
     let chromeTimer = 0;
 
     function pageSrc(n) {
       return `./mobile/page-${String(n).padStart(2, "0")}.jpg`;
     }
 
-    function showLoading(visible) {
-      loadingEl.classList.toggle("is-visible", visible);
+    function thumbSrc(n) {
+      return `./thumbs/page-${String(n).padStart(2, "0")}.jpg`;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function toggleLoading(visible) {
+      loading.classList.toggle("is-visible", visible);
     }
 
     function warm(n) {
@@ -467,74 +536,117 @@
       cache.set(n, img);
     }
 
-    function syncChrome() {
-      statusEl.textContent = `${page} / ${totalPages}`;
-      rangeValueEl.textContent = `${page} / ${totalPages}`;
-      scrubber.value = String(page);
-      prevButton.disabled = page === 1 || animating;
-      nextButton.disabled = page === totalPages || animating;
-      firstButton.disabled = page === 1 || animating;
-      lastButton.disabled = page === totalPages || animating;
+    function updateThumbActive() {
+      thumbGrid.querySelectorAll(".thumb").forEach((thumb) => {
+        thumb.classList.toggle("is-active", Number(thumb.dataset.page) === page);
+      });
     }
 
-    function primeNeighbors() {
-      warm(page - 1);
-      warm(page + 1);
-      warm(page + 2);
+    function setPanel(name) {
+      openPanel = openPanel === name ? "" : name;
+      pagePanel.classList.toggle("is-open", openPanel === "page");
+      thumbPanel.classList.toggle("is-open", openPanel === "thumb");
+      keepChromeVisible();
+    }
+
+    function applyZoom() {
+      currentImage.style.setProperty("--zoom", String(zoom));
+      currentImage.style.setProperty("--pan-x", `${panX}px`);
+      currentImage.style.setProperty("--pan-y", `${panY}px`);
+      zoomOutButton.disabled = zoom <= 1;
+      if (zoom <= 1) {
+        panX = 0;
+        panY = 0;
+        currentImage.style.setProperty("--pan-x", "0px");
+        currentImage.style.setProperty("--pan-y", "0px");
+      }
+    }
+
+    function resetZoom() {
+      zoom = 1;
+      panX = 0;
+      panY = 0;
+      applyZoom();
+    }
+
+    function maxPanX() {
+      return ((zoom - 1) * stage.clientWidth) / 2;
+    }
+
+    function maxPanY() {
+      return ((zoom - 1) * stage.clientHeight) / 2;
+    }
+
+    function syncUI() {
+      badge.textContent = `${page} / ${totalPages}`;
+      pagePanelNote.textContent = `${page} / ${totalPages}`;
+      scrubber.value = String(page);
+      scrubberValue.textContent = `${page} / ${totalPages}`;
+      prevButton.disabled = page === 1 || animating || zoom > 1;
+      nextButton.disabled = page === totalPages || animating || zoom > 1;
+      pageButton.textContent = `页码 ${page}/${totalPages}`;
+      updateThumbActive();
+      zoomInButton.disabled = zoom >= 2.6;
+      zoomOutButton.disabled = zoom <= 1;
     }
 
     function keepChromeVisible() {
       app.classList.remove("is-immersive");
-      window.clearTimeout(chromeTimer);
-      chromeTimer = window.setTimeout(() => {
+      clearTimeout(chromeTimer);
+      chromeTimer = setTimeout(() => {
         app.classList.add("is-immersive");
-      }, 2400);
+      }, 2200);
     }
 
-    function toggleChrome() {
-      const willHide = !app.classList.contains("is-immersive");
-      app.classList.toggle("is-immersive", willHide);
-      window.clearTimeout(chromeTimer);
-      if (!willHide) {
+    function toggleImmersive() {
+      const hide = !app.classList.contains("is-immersive");
+      app.classList.toggle("is-immersive", hide);
+      if (!hide) {
         keepChromeVisible();
+      } else {
+        clearTimeout(chromeTimer);
       }
     }
 
-    function finish(target) {
+    function finishChange(target) {
       page = target;
       currentImage.src = pageSrc(page);
-      currentImage.alt = `AIDO brochure page ${page}`;
-      currentImage.className = "sheet is-active";
-      nextImage.className = "sheet";
+      currentImage.alt = `爱多电子画册第 ${page} 页`;
+      currentImage.className = "page-image is-visible";
+      nextImage.className = "page-image";
       animating = false;
-      showLoading(false);
-      syncChrome();
-      primeNeighbors();
+      toggleLoading(false);
+      resetZoom();
+      warm(page - 1);
+      warm(page + 1);
+      warm(page + 2);
+      syncUI();
       keepChromeVisible();
     }
 
     function go(target) {
-      if (animating || target < 1 || target > totalPages || target === page) return;
+      if (animating || target < 1 || target > totalPages || target === page || zoom > 1) return;
       animating = true;
-      syncChrome();
-      showLoading(true);
+      toggleLoading(true);
       keepChromeVisible();
+      openPanel = "";
+      pagePanel.classList.remove("is-open");
+      thumbPanel.classList.remove("is-open");
 
-      const direction = target > page ? "forward" : "backward";
       const src = pageSrc(target);
       const loader = cache.get(target) || new Image();
       loader.decoding = "async";
       loader.onload = () => {
         nextImage.src = src;
-        nextImage.alt = `AIDO brochure page ${target}`;
-        nextImage.className = "sheet is-active";
-        currentImage.className = direction === "forward" ? "sheet is-exit-left" : "sheet is-exit-right";
-        window.setTimeout(() => finish(target), 240);
+        nextImage.alt = `爱多电子画册第 ${target} 页`;
+        nextImage.className = "page-image is-visible";
+        currentImage.className = "page-image";
+        setTimeout(() => finishChange(target), 180);
       };
       loader.onerror = () => {
         animating = false;
-        showLoading(false);
-        syncChrome();
+        toggleLoading(false);
+        syncUI();
       };
 
       if (!cache.has(target)) {
@@ -543,53 +655,128 @@
       } else if (loader.complete) {
         loader.onload();
       }
+      syncUI();
     }
 
+    function buildThumbs() {
+      const frag = document.createDocumentFragment();
+      for (let i = 1; i <= totalPages; i += 1) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "thumb";
+        button.dataset.page = String(i);
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.src = thumbSrc(i);
+        img.alt = `第 ${i} 页缩略图`;
+        const label = document.createElement("span");
+        label.textContent = `第 ${i} 页`;
+        button.append(img, label);
+        button.addEventListener("click", () => {
+          setPanel("thumb");
+          go(i);
+        });
+        frag.append(button);
+      }
+      thumbGrid.append(frag);
+    }
+
+    pageButton.addEventListener("click", () => setPanel("page"));
+    thumbButton.addEventListener("click", () => setPanel("thumb"));
     prevButton.addEventListener("click", () => go(page - 1));
     nextButton.addEventListener("click", () => go(page + 1));
-    prevZone.addEventListener("click", () => go(page - 1));
-    nextZone.addEventListener("click", () => go(page + 1));
-    firstButton.addEventListener("click", () => go(1));
-    lastButton.addEventListener("click", () => go(totalPages));
-    pdfButton.addEventListener("click", () => {
-      window.location.href = "./aido-logo.pdf";
+    zoomInButton.addEventListener("click", () => {
+      zoom = clamp(Number((zoom + 0.4).toFixed(2)), 1, 2.6);
+      applyZoom();
+      syncUI();
+      keepChromeVisible();
     });
-    toggleZone.addEventListener("click", toggleChrome);
-
-    scrubber.addEventListener("input", () => {
-      rangeValueEl.textContent = `${scrubber.value} / ${totalPages}`;
+    zoomOutButton.addEventListener("click", () => {
+      zoom = clamp(Number((zoom - 0.4).toFixed(2)), 1, 2.6);
+      applyZoom();
+      syncUI();
       keepChromeVisible();
     });
 
+    scrubber.addEventListener("input", () => {
+      scrubberValue.textContent = `${scrubber.value} / ${totalPages}`;
+      keepChromeVisible();
+    });
     scrubber.addEventListener("change", () => {
       go(Number(scrubber.value));
     });
 
-    stage.addEventListener("touchstart", (event) => {
-      const touch = event.changedTouches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
+    stage.addEventListener("pointerdown", (event) => {
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      startPanX = panX;
+      startPanY = panY;
+      draggingZoom = false;
       keepChromeVisible();
-    }, { passive: true });
+      if (zoom > 1) {
+        stage.setPointerCapture(event.pointerId);
+      }
+    });
 
-    stage.addEventListener("touchend", (event) => {
-      const touch = event.changedTouches[0];
-      const dx = touch.clientX - touchStartX;
-      const dy = touch.clientY - touchStartY;
-      if (Math.abs(dx) < 38 || Math.abs(dx) < Math.abs(dy)) return;
-      if (dx < 0) go(page + 1);
-      if (dx > 0) go(page - 1);
-    }, { passive: true });
+    stage.addEventListener("pointermove", (event) => {
+      if (zoom <= 1) return;
+      const dx = event.clientX - pointerStartX;
+      const dy = event.clientY - pointerStartY;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+        draggingZoom = true;
+      }
+      panX = clamp(startPanX + dx, -maxPanX(), maxPanX());
+      panY = clamp(startPanY + dy, -maxPanY(), maxPanY());
+      applyZoom();
+      currentImage.classList.add("is-dragging");
+    });
+
+    stage.addEventListener("pointerup", (event) => {
+      currentImage.classList.remove("is-dragging");
+      const dx = event.clientX - pointerStartX;
+      const dy = event.clientY - pointerStartY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      if (zoom > 1) {
+        draggingZoom = false;
+        return;
+      }
+
+      if (absX > 42 && absX > absY) {
+        if (dx < 0) go(page + 1);
+        if (dx > 0) go(page - 1);
+        return;
+      }
+
+      if (absX < 12 && absY < 12) {
+        const rect = stage.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        if (x < rect.width * 0.22) {
+          go(page - 1);
+          return;
+        }
+        if (x > rect.width * 0.78) {
+          go(page + 1);
+          return;
+        }
+        toggleImmersive();
+      }
+    });
 
     window.addEventListener("keydown", (event) => {
+      if (zoom > 1) return;
       if (event.key === "ArrowLeft") go(page - 1);
       if (event.key === "ArrowRight") go(page + 1);
     });
 
     currentImage.src = pageSrc(1);
-    currentImage.alt = "AIDO brochure page 1";
-    syncChrome();
-    primeNeighbors();
+    buildThumbs();
+    warm(2);
+    warm(3);
+    resetZoom();
+    syncUI();
     keepChromeVisible();
   </script>
 </body>
