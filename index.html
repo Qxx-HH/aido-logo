@@ -4,111 +4,345 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
-  <title>爱多电子画册</title>
+  <title>鐖卞鐢靛瓙鐢诲唽</title>
   <style>
     :root {
-      color-scheme: light;
-      --bg: #ece8df;
-      --card: #ffffff;
-      --text: #20242b;
-      --muted: #707885;
-      --line: rgba(32, 36, 43, 0.08);
-      --shadow: 0 18px 44px rgba(32, 36, 43, 0.12);
+      color-scheme: dark;
+      --bg: #141619;
+      --panel: rgba(255, 255, 255, 0.08);
+      --text: #f2f4f7;
+      --muted: rgba(242, 244, 247, 0.68);
+      --shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+      --edge: rgba(255, 255, 255, 0.14);
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html,
     body {
       margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background:
-        radial-gradient(circle at top, rgba(205, 166, 102, 0.18), transparent 26%),
-        linear-gradient(180deg, #f6f2ea 0%, var(--bg) 100%);
+        radial-gradient(circle at top, rgba(189, 145, 72, 0.14), transparent 22%),
+        linear-gradient(180deg, #1b1d20 0%, var(--bg) 100%);
       color: var(--text);
       font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
     }
 
-    .shell {
-      width: min(860px, 100%);
-      margin: 0 auto;
-      padding: 18px 12px 28px;
+    body {
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
     }
 
-    .intro {
-      padding: 12px 8px 18px;
-      text-align: center;
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      padding: 12px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
     }
 
-    .intro h1 {
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 4px 0;
+      gap: 12px;
+    }
+
+    .title {
       margin: 0;
-      font-size: 24px;
-      line-height: 1.2;
+      font-size: 16px;
+      line-height: 1.25;
       font-weight: 700;
     }
 
-    .intro p {
-      margin: 10px 0 0;
-      font-size: 13px;
-      line-height: 1.6;
+    .status {
+      flex: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--panel);
+      font-size: 12px;
+      line-height: 1;
       color: var(--muted);
     }
 
-    .pages {
+    .viewer {
+      position: relative;
+      min-height: 0;
       display: grid;
-      gap: 16px;
+      place-items: center;
     }
 
-    .page {
-      margin: 0;
-      padding: 0;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
+    .frame {
+      position: relative;
+      width: min(100%, 860px);
+      aspect-ratio: 1440 / 984;
+      border-radius: 20px;
       overflow: hidden;
       box-shadow: var(--shadow);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--edge);
+      touch-action: pan-y;
     }
 
-    .page img {
-      display: block;
+    .sheet {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      height: auto;
-      background: #f1efe8;
+      height: 100%;
+      object-fit: contain;
+      background: #111;
+      opacity: 0;
+      transform: translateX(18px) scale(0.985);
+      transition: transform 220ms ease, opacity 220ms ease;
+      will-change: transform, opacity;
     }
 
-    .page figcaption {
-      padding: 10px 14px;
+    .sheet.is-active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      z-index: 2;
+    }
+
+    .sheet.is-exit-left {
+      opacity: 0;
+      transform: translateX(-12%) scale(0.985);
+      z-index: 1;
+    }
+
+    .sheet.is-exit-right {
+      opacity: 0;
+      transform: translateX(12%) scale(0.985);
+      z-index: 1;
+    }
+
+    .hotspot {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 18%;
+      z-index: 3;
+    }
+
+    .hotspot.left {
+      left: 0;
+    }
+
+    .hotspot.right {
+      right: 0;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .hint {
       font-size: 12px;
       color: var(--muted);
-      border-top: 1px solid var(--line);
+      line-height: 1.4;
+      padding-left: 4px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      min-width: 88px;
+      height: 40px;
+      padding: 0 16px;
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+    }
+
+    button:disabled {
+      opacity: 0.35;
+    }
+
+    .loading {
+      position: absolute;
+      inset: auto 50% 18px auto;
+      transform: translateX(50%);
+      z-index: 4;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.48);
+      font-size: 12px;
+      color: #fff;
+      opacity: 0;
+      transition: opacity 180ms ease;
+      pointer-events: none;
+    }
+
+    .loading.is-visible {
+      opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        padding: 10px 10px 14px;
+      }
+
+      .frame {
+        width: 100%;
+      }
+
+      .hint {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <section class="intro">
-      <h1>爱多电子画册</h1>
-      <p>微信内可直接预览。向下滑动查看全部 40 页。</p>
+  <main class="app">
+    <header class="topbar">
+      <h1 class="title">鐖卞鐢靛瓙鐢诲唽</h1>
+      <div class="status" id="status">1 / 40</div>
+    </header>
+    <section class="viewer">
+      <div class="frame" id="frame">
+        <img class="sheet is-active" id="currentImage" alt="鐖卞鐢靛瓙鐢诲唽褰撳墠椤?>
+        <img class="sheet" id="nextImage" alt="">
+        <div class="hotspot left" id="prevHotspot" aria-hidden="true"></div>
+        <div class="hotspot right" id="nextHotspot" aria-hidden="true"></div>
+        <div class="loading" id="loading">鍔犺浇涓€?/div>
+      </div>
     </section>
-    <section class="pages" id="pages"></section>
+    <footer class="nav">
+      <div class="hint">宸﹀彸婊戝姩鎴栫偣鍑讳袱渚х炕椤?/div>
+      <div class="actions">
+        <button id="prevButton" type="button">涓婁竴椤?/button>
+        <button id="nextButton" type="button">涓嬩竴椤?/button>
+      </div>
+    </footer>
   </main>
   <script>
     const totalPages = 40;
-    const pagesEl = document.getElementById("pages");
-    for (let i = 1; i <= totalPages; i += 1) {
-      const num = String(i).padStart(2, "0");
-      const fig = document.createElement("figure");
-      fig.className = "page";
-      const img = document.createElement("img");
-      img.alt = `爱多电子画册 第 ${i} 页`;
-      img.loading = i === 1 ? "eager" : "lazy";
-      img.decoding = "async";
-      img.src = `./mobile/page-${num}.jpg`;
-      const cap = document.createElement("figcaption");
-      cap.textContent = `第 ${i} / ${totalPages} 页`;
-      fig.append(img, cap);
-      pagesEl.append(fig);
+    const statusEl = document.getElementById("status");
+    const currentImage = document.getElementById("currentImage");
+    const nextImage = document.getElementById("nextImage");
+    const loadingEl = document.getElementById("loading");
+    const prevButton = document.getElementById("prevButton");
+    const nextButton = document.getElementById("nextButton");
+    const prevHotspot = document.getElementById("prevHotspot");
+    const nextHotspot = document.getElementById("nextHotspot");
+    const cache = new Map();
+    let page = 1;
+    let animating = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    function pageSrc(n) {
+      return `./mobile/page-${String(n).padStart(2, "0")}.jpg`;
     }
+
+    function warm(n) {
+      if (n < 1 || n > totalPages || cache.has(n)) return;
+      const img = new Image();
+      img.decoding = "async";
+      img.src = pageSrc(n);
+      cache.set(n, img);
+    }
+
+    function setLoading(visible) {
+      loadingEl.classList.toggle("is-visible", visible);
+    }
+
+    function syncControls() {
+      statusEl.textContent = `${page} / ${totalPages}`;
+      prevButton.disabled = page === 1 || animating;
+      nextButton.disabled = page === totalPages || animating;
+    }
+
+    function primeNeighbors() {
+      warm(page - 1);
+      warm(page + 1);
+      warm(page + 2);
+    }
+
+    function commitPage(target) {
+      page = target;
+      currentImage.src = pageSrc(page);
+      currentImage.alt = `鐖卞鐢靛瓙鐢诲唽 绗?${page} 椤礰;
+      currentImage.className = "sheet is-active";
+      nextImage.className = "sheet";
+      animating = false;
+      setLoading(false);
+      syncControls();
+      primeNeighbors();
+    }
+
+    function go(target) {
+      if (animating || target < 1 || target > totalPages || target === page) return;
+      animating = true;
+      syncControls();
+      setLoading(true);
+
+      const direction = target > page ? "forward" : "backward";
+      const src = pageSrc(target);
+      const loader = cache.get(target) || new Image();
+      loader.decoding = "async";
+      loader.onload = () => {
+        nextImage.src = src;
+        nextImage.alt = `鐖卞鐢靛瓙鐢诲唽 绗?${target} 椤礰;
+        nextImage.className = "sheet is-active";
+        currentImage.className = direction === "forward" ? "sheet is-exit-left" : "sheet is-exit-right";
+        window.setTimeout(() => commitPage(target), 220);
+      };
+      loader.onerror = () => {
+        animating = false;
+        setLoading(false);
+        syncControls();
+      };
+      if (!cache.has(target)) {
+        cache.set(target, loader);
+        loader.src = src;
+      } else if (loader.complete) {
+        loader.onload();
+      }
+    }
+
+    prevButton.addEventListener("click", () => go(page - 1));
+    nextButton.addEventListener("click", () => go(page + 1));
+    prevHotspot.addEventListener("click", () => go(page - 1));
+    nextHotspot.addEventListener("click", () => go(page + 1));
+
+    document.getElementById("frame").addEventListener("touchstart", (event) => {
+      const touch = event.changedTouches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }, { passive: true });
+
+    document.getElementById("frame").addEventListener("touchend", (event) => {
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0) go(page + 1);
+      if (dx > 0) go(page - 1);
+    }, { passive: true });
+
+    currentImage.src = pageSrc(1);
+    currentImage.alt = "鐖卞鐢靛瓙鐢诲唽 绗?1 椤?;
+    syncControls();
+    primeNeighbors();
   </script>
 </body>
 </html>
