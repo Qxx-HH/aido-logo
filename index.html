@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
-  <title>鐖卞鐢靛瓙鐢诲唽</title>
+  <title>AIDO e-Brochure</title>
   <style>
     :root {
       color-scheme: dark;
@@ -213,23 +213,23 @@
 <body>
   <main class="app">
     <header class="topbar">
-      <h1 class="title">鐖卞鐢靛瓙鐢诲唽</h1>
+      <h1 class="title">AIDO e-Brochure</h1>
       <div class="status" id="status">1 / 40</div>
     </header>
     <section class="viewer">
       <div class="frame" id="frame">
-        <img class="sheet is-active" id="currentImage" alt="鐖卞鐢靛瓙鐢诲唽褰撳墠椤?>
+        <img class="sheet is-active" id="currentImage" alt="Current brochure page">
         <img class="sheet" id="nextImage" alt="">
         <div class="hotspot left" id="prevHotspot" aria-hidden="true"></div>
         <div class="hotspot right" id="nextHotspot" aria-hidden="true"></div>
-        <div class="loading" id="loading">鍔犺浇涓€?/div>
+        <div class="loading" id="loading">Loading...</div>
       </div>
     </section>
     <footer class="nav">
-      <div class="hint">宸﹀彸婊戝姩鎴栫偣鍑讳袱渚х炕椤?/div>
+      <div class="hint">Swipe left or right to turn pages</div>
       <div class="actions">
-        <button id="prevButton" type="button">涓婁竴椤?/button>
-        <button id="nextButton" type="button">涓嬩竴椤?/button>
+        <button id="prevButton" type="button">Prev</button>
+        <button id="nextButton" type="button">Next</button>
       </div>
     </footer>
   </main>
@@ -280,7 +280,7 @@
     function commitPage(target) {
       page = target;
       currentImage.src = pageSrc(page);
-      currentImage.alt = `鐖卞鐢靛瓙鐢诲唽 绗?${page} 椤礰;
+      currentImage.alt = `AIDO brochure page ${page}`;
       currentImage.className = "sheet is-active";
       nextImage.className = "sheet";
       animating = false;
@@ -301,7 +301,7 @@
       loader.decoding = "async";
       loader.onload = () => {
         nextImage.src = src;
-        nextImage.alt = `鐖卞鐢靛瓙鐢诲唽 绗?${target} 椤礰;
+        nextImage.alt = `AIDO brochure page ${target}`;
         nextImage.className = "sheet is-active";
         currentImage.className = direction === "forward" ? "sheet is-exit-left" : "sheet is-exit-right";
         window.setTimeout(() => commitPage(target), 220);
@@ -340,7 +340,7 @@
     }, { passive: true });
 
     currentImage.src = pageSrc(1);
-    currentImage.alt = "鐖卞鐢靛瓙鐢诲唽 绗?1 椤?;
+    currentImage.alt = "AIDO brochure page 1";
     syncControls();
     primeNeighbors();
   </script>
