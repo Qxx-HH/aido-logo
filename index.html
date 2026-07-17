@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>爱多 LOGO 文件下载</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f1ea;
+      --card: rgba(255, 255, 255, 0.92);
+      --text: #1f252c;
+      --muted: #616b75;
+      --accent: #bc8a3c;
+      --accent-dark: #8c6325;
+      --border: rgba(31, 37, 44, 0.08);
+      --shadow: 0 24px 60px rgba(31, 37, 44, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(188, 138, 60, 0.18), transparent 32%),
+        linear-gradient(180deg, #f8f5ef 0%, var(--bg) 100%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(680px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 36px 28px;
+      backdrop-filter: blur(8px);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-dark);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 44px);
+      line-height: 1.08;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 18px 0 0;
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      box-shadow: 0 18px 40px rgba(140, 99, 37, 0.28);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: #fff;
+      border: 1px solid var(--border);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .meta {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <p class="eyebrow">AIDO</p>
+    <h1>爱多 LOGO 文件</h1>
+    <p>点击下方按钮即可在线查看或下载 PDF 文件。建议在微信、浏览器或系统自带阅读器中打开。</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="./aido-logo.pdf" target="_blank" rel="noopener">打开 PDF</a>
+      <a class="btn btn-secondary" href="./aido-logo.pdf" download>下载文件</a>
+    </div>
+    <div class="meta">文件名：aido-logo.pdf</div>
+  </main>
+</body>
+</html>
