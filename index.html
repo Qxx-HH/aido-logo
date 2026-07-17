@@ -9,12 +9,12 @@
     :root {
       color-scheme: dark;
       --bg: #0f1113;
-      --panel: rgba(17, 19, 22, 0.8);
-      --panel-strong: rgba(17, 19, 22, 0.94);
+      --panel: rgba(18, 20, 23, 0.82);
+      --panel-strong: rgba(18, 20, 23, 0.96);
       --line: rgba(255, 255, 255, 0.1);
-      --text: #f3f4f6;
-      --muted: rgba(243, 244, 246, 0.66);
-      --accent: #c9994f;
+      --text: #f5f6f7;
+      --muted: rgba(245, 246, 247, 0.68);
+      --accent: #cb9a4e;
       --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
     }
 
@@ -31,7 +31,7 @@
       height: 100%;
       overflow: hidden;
       background:
-        radial-gradient(circle at top, rgba(201, 153, 79, 0.14), transparent 22%),
+        radial-gradient(circle at top, rgba(203, 154, 78, 0.14), transparent 22%),
         linear-gradient(180deg, #17191c 0%, var(--bg) 100%);
       color: var(--text);
       font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
@@ -56,9 +56,14 @@
       transition: opacity 180ms ease, transform 180ms ease;
     }
 
+    .panel,
+    .nav-button {
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
     .app.is-immersive .chrome,
-    .app.is-immersive .nav-button,
-    .app.is-immersive .panel {
+    .app.is-immersive .panel,
+    .app.is-immersive .nav-button {
       opacity: 0;
       pointer-events: none;
       transform: translateY(10px);
@@ -130,7 +135,7 @@
 
     .stage {
       position: relative;
-      width: min(100%, 980px);
+      width: min(100%, 1020px);
       height: min(calc(100vh - 158px), calc(100vw * 0.684));
       min-height: 320px;
       border-radius: 22px;
@@ -152,8 +157,8 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
-      touch-action: none;
       background: #0d0f12;
+      touch-action: none;
     }
 
     .page-image {
@@ -177,10 +182,6 @@
       opacity: 1;
     }
 
-    .page-image.is-dragging {
-      transition: opacity 180ms ease;
-    }
-
     .nav-button {
       position: absolute;
       top: 50%;
@@ -190,11 +191,11 @@
       margin-top: -32px;
       border: 0;
       border-radius: 16px;
-      background: rgba(17, 19, 22, 0.42);
+      background: rgba(18, 20, 23, 0.42);
       color: #fff;
       font-size: 24px;
+      line-height: 1;
       backdrop-filter: blur(10px);
-      transition: opacity 180ms ease, background 180ms ease;
     }
 
     .nav-button:disabled {
@@ -279,8 +280,8 @@
     }
 
     .chip.strong {
-      background: rgba(201, 153, 79, 0.14);
-      border-color: rgba(201, 153, 79, 0.28);
+      background: rgba(203, 154, 78, 0.14);
+      border-color: rgba(203, 154, 78, 0.28);
     }
 
     .panel {
@@ -298,7 +299,6 @@
       opacity: 0;
       pointer-events: none;
       transform: translateY(10px);
-      transition: opacity 180ms ease, transform 180ms ease;
     }
 
     .panel.is-open {
@@ -347,7 +347,7 @@
 
     .thumb-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
       gap: 10px;
       max-height: min(48vh, 420px);
       overflow: auto;
@@ -365,8 +365,8 @@
     }
 
     .thumb.is-active {
-      border-color: rgba(201, 153, 79, 0.72);
-      box-shadow: 0 0 0 1px rgba(201, 153, 79, 0.32) inset;
+      border-color: rgba(203, 154, 78, 0.72);
+      box-shadow: 0 0 0 1px rgba(203, 154, 78, 0.28) inset;
     }
 
     .thumb img {
@@ -465,7 +465,7 @@
 
     <div class="chrome toolbar-wrap">
       <div class="toolbar">
-        <div class="hint">点屏幕进入沉浸阅读，左右滑动翻页，放大后可拖动查看。</div>
+        <div class="hint">点一下屏幕切换控件显示，双指捏合可放大缩小，左右滑动翻页。</div>
         <div class="tool-buttons">
           <button class="chip" id="pageButton" type="button">页码</button>
           <button class="chip" id="thumbButton" type="button">缩略图</button>
@@ -480,7 +480,6 @@
     const totalPages = 40;
     const app = document.getElementById("app");
     const stage = document.getElementById("stage");
-    const viewport = document.getElementById("viewport");
     const currentImage = document.getElementById("currentImage");
     const nextImage = document.getElementById("nextImage");
     const prevButton = document.getElementById("prevButton");
@@ -505,12 +504,16 @@
     let zoom = 1;
     let panX = 0;
     let panY = 0;
-    let pointerStartX = 0;
-    let pointerStartY = 0;
-    let startPanX = 0;
-    let startPanY = 0;
-    let draggingZoom = false;
-    let chromeTimer = 0;
+    let swipeStartX = 0;
+    let swipeStartY = 0;
+    let swipeMoved = false;
+    let pinchStartDistance = 0;
+    let pinchStartZoom = 1;
+    let pinchStartCenterX = 0;
+    let pinchStartCenterY = 0;
+    let pinchBasePanX = 0;
+    let pinchBasePanY = 0;
+    let activeTouches = [];
 
     function pageSrc(n) {
       return `./mobile/page-${String(n).padStart(2, "0")}.jpg`;
@@ -546,14 +549,29 @@
       openPanel = openPanel === name ? "" : name;
       pagePanel.classList.toggle("is-open", openPanel === "page");
       thumbPanel.classList.toggle("is-open", openPanel === "thumb");
-      keepChromeVisible();
+      app.classList.remove("is-immersive");
     }
 
-    function applyZoom() {
+    function closePanels() {
+      openPanel = "";
+      pagePanel.classList.remove("is-open");
+      thumbPanel.classList.remove("is-open");
+    }
+
+    function maxPanX() {
+      return ((zoom - 1) * stage.clientWidth) / 2;
+    }
+
+    function maxPanY() {
+      return ((zoom - 1) * stage.clientHeight) / 2;
+    }
+
+    function applyTransform() {
       currentImage.style.setProperty("--zoom", String(zoom));
       currentImage.style.setProperty("--pan-x", `${panX}px`);
       currentImage.style.setProperty("--pan-y", `${panY}px`);
       zoomOutButton.disabled = zoom <= 1;
+      zoomInButton.disabled = zoom >= 3;
       if (zoom <= 1) {
         panX = 0;
         panY = 0;
@@ -566,15 +584,7 @@
       zoom = 1;
       panX = 0;
       panY = 0;
-      applyZoom();
-    }
-
-    function maxPanX() {
-      return ((zoom - 1) * stage.clientWidth) / 2;
-    }
-
-    function maxPanY() {
-      return ((zoom - 1) * stage.clientHeight) / 2;
+      applyTransform();
     }
 
     function syncUI() {
@@ -586,26 +596,8 @@
       nextButton.disabled = page === totalPages || animating || zoom > 1;
       pageButton.textContent = `页码 ${page}/${totalPages}`;
       updateThumbActive();
-      zoomInButton.disabled = zoom >= 2.6;
+      zoomInButton.disabled = zoom >= 3;
       zoomOutButton.disabled = zoom <= 1;
-    }
-
-    function keepChromeVisible() {
-      app.classList.remove("is-immersive");
-      clearTimeout(chromeTimer);
-      chromeTimer = setTimeout(() => {
-        app.classList.add("is-immersive");
-      }, 2200);
-    }
-
-    function toggleImmersive() {
-      const hide = !app.classList.contains("is-immersive");
-      app.classList.toggle("is-immersive", hide);
-      if (!hide) {
-        keepChromeVisible();
-      } else {
-        clearTimeout(chromeTimer);
-      }
     }
 
     function finishChange(target) {
@@ -621,17 +613,13 @@
       warm(page + 1);
       warm(page + 2);
       syncUI();
-      keepChromeVisible();
     }
 
     function go(target) {
       if (animating || target < 1 || target > totalPages || target === page || zoom > 1) return;
       animating = true;
+      closePanels();
       toggleLoading(true);
-      keepChromeVisible();
-      openPanel = "";
-      pagePanel.classList.remove("is-open");
-      thumbPanel.classList.remove("is-open");
 
       const src = pageSrc(target);
       const loader = cache.get(target) || new Image();
@@ -674,7 +662,7 @@
         label.textContent = `第 ${i} 页`;
         button.append(img, label);
         button.addEventListener("click", () => {
-          setPanel("thumb");
+          closePanels();
           go(i);
         });
         frag.append(button);
@@ -682,87 +670,182 @@
       thumbGrid.append(frag);
     }
 
+    function getDistance(a, b) {
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    }
+
+    function getCenter(a, b) {
+      return {
+        x: (a.clientX + b.clientX) / 2,
+        y: (a.clientY + b.clientY) / 2
+      };
+    }
+
     pageButton.addEventListener("click", () => setPanel("page"));
     thumbButton.addEventListener("click", () => setPanel("thumb"));
     prevButton.addEventListener("click", () => go(page - 1));
     nextButton.addEventListener("click", () => go(page + 1));
     zoomInButton.addEventListener("click", () => {
-      zoom = clamp(Number((zoom + 0.4).toFixed(2)), 1, 2.6);
-      applyZoom();
+      zoom = clamp(Number((zoom + 0.35).toFixed(2)), 1, 3);
+      applyTransform();
       syncUI();
-      keepChromeVisible();
     });
     zoomOutButton.addEventListener("click", () => {
-      zoom = clamp(Number((zoom - 0.4).toFixed(2)), 1, 2.6);
-      applyZoom();
+      zoom = clamp(Number((zoom - 0.35).toFixed(2)), 1, 3);
+      applyTransform();
       syncUI();
-      keepChromeVisible();
     });
 
     scrubber.addEventListener("input", () => {
       scrubberValue.textContent = `${scrubber.value} / ${totalPages}`;
-      keepChromeVisible();
     });
     scrubber.addEventListener("change", () => {
       go(Number(scrubber.value));
     });
 
-    stage.addEventListener("pointerdown", (event) => {
-      pointerStartX = event.clientX;
-      pointerStartY = event.clientY;
-      startPanX = panX;
-      startPanY = panY;
-      draggingZoom = false;
-      keepChromeVisible();
-      if (zoom > 1) {
-        stage.setPointerCapture(event.pointerId);
+    stage.addEventListener("touchstart", (event) => {
+      activeTouches = Array.from(event.touches);
+      if (activeTouches.length === 1) {
+        const touch = activeTouches[0];
+        swipeStartX = touch.clientX;
+        swipeStartY = touch.clientY;
+        swipeMoved = false;
       }
-    });
-
-    stage.addEventListener("pointermove", (event) => {
-      if (zoom <= 1) return;
-      const dx = event.clientX - pointerStartX;
-      const dy = event.clientY - pointerStartY;
-      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
-        draggingZoom = true;
+      if (activeTouches.length === 2) {
+        const [a, b] = activeTouches;
+        pinchStartDistance = getDistance(a, b);
+        pinchStartZoom = zoom;
+        const center = getCenter(a, b);
+        pinchStartCenterX = center.x;
+        pinchStartCenterY = center.y;
+        pinchBasePanX = panX;
+        pinchBasePanY = panY;
       }
-      panX = clamp(startPanX + dx, -maxPanX(), maxPanX());
-      panY = clamp(startPanY + dy, -maxPanY(), maxPanY());
-      applyZoom();
-      currentImage.classList.add("is-dragging");
-    });
+    }, { passive: true });
 
-    stage.addEventListener("pointerup", (event) => {
-      currentImage.classList.remove("is-dragging");
-      const dx = event.clientX - pointerStartX;
-      const dy = event.clientY - pointerStartY;
+    stage.addEventListener("touchmove", (event) => {
+      activeTouches = Array.from(event.touches);
+
+      if (activeTouches.length === 2) {
+        event.preventDefault();
+        const [a, b] = activeTouches;
+        const distance = getDistance(a, b);
+        const center = getCenter(a, b);
+        zoom = clamp(Number((pinchStartZoom * (distance / Math.max(pinchStartDistance, 1))).toFixed(3)), 1, 3);
+        panX = clamp(pinchBasePanX + (center.x - pinchStartCenterX), -maxPanX(), maxPanX());
+        panY = clamp(pinchBasePanY + (center.y - pinchStartCenterY), -maxPanY(), maxPanY());
+        applyTransform();
+        syncUI();
+        return;
+      }
+
+      if (activeTouches.length === 1 && zoom > 1) {
+        event.preventDefault();
+        const touch = activeTouches[0];
+        const dx = touch.clientX - swipeStartX;
+        const dy = touch.clientY - swipeStartY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+          swipeMoved = true;
+        }
+        panX = clamp(pinchBasePanX + dx, -maxPanX(), maxPanX());
+        panY = clamp(pinchBasePanY + dy, -maxPanY(), maxPanY());
+        applyTransform();
+        syncUI();
+        return;
+      }
+
+      if (activeTouches.length === 1) {
+        const touch = activeTouches[0];
+        const dx = touch.clientX - swipeStartX;
+        const dy = touch.clientY - swipeStartY;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+          swipeMoved = true;
+        }
+      }
+    }, { passive: false });
+
+    stage.addEventListener("touchend", (event) => {
+      const remaining = Array.from(event.touches);
+      if (remaining.length === 1) {
+        const touch = remaining[0];
+        swipeStartX = touch.clientX;
+        swipeStartY = touch.clientY;
+        pinchBasePanX = panX;
+        pinchBasePanY = panY;
+      }
+
+      if (event.changedTouches.length !== 1 || remaining.length > 0) {
+        activeTouches = remaining;
+        return;
+      }
+
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - swipeStartX;
+      const dy = touch.clientY - swipeStartY;
       const absX = Math.abs(dx);
       const absY = Math.abs(dy);
 
       if (zoom > 1) {
-        draggingZoom = false;
+        activeTouches = remaining;
         return;
       }
 
       if (absX > 42 && absX > absY) {
         if (dx < 0) go(page + 1);
         if (dx > 0) go(page - 1);
+        activeTouches = remaining;
         return;
       }
 
-      if (absX < 12 && absY < 12) {
-        const rect = stage.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        if (x < rect.width * 0.22) {
-          go(page - 1);
-          return;
-        }
-        if (x > rect.width * 0.78) {
-          go(page + 1);
-          return;
-        }
-        toggleImmersive();
+      if (!swipeMoved && absX < 10 && absY < 10) {
+        closePanels();
+        app.classList.toggle("is-immersive");
       }
+
+      activeTouches = remaining;
+    }, { passive: true });
+
+    stage.addEventListener("mousedown", (event) => {
+      if (event.button !== 0 || zoom > 1) return;
+      swipeStartX = event.clientX;
+      swipeStartY = event.clientY;
+      swipeMoved = false;
+    });
+
+    stage.addEventListener("mousemove", (event) => {
+      if ((event.buttons & 1) !== 1 || zoom > 1) return;
+      if (Math.abs(event.clientX - swipeStartX) > 8 || Math.abs(event.clientY - swipeStartY) > 8) {
+        swipeMoved = true;
+      }
+    });
+
+    stage.addEventListener("mouseup", (event) => {
+      if (zoom > 1) return;
+      const dx = event.clientX - swipeStartX;
+      const dy = event.clientY - swipeStartY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      if (absX > 42 && absX > absY) {
+        if (dx < 0) go(page + 1);
+        if (dx > 0) go(page - 1);
+        return;
+      }
+      if (!swipeMoved && absX < 6 && absY < 6) {
+        closePanels();
+        app.classList.toggle("is-immersive");
+      }
+    });
+
+    stage.addEventListener("dblclick", () => {
+      if (zoom === 1) {
+        zoom = 2;
+      } else {
+        zoom = 1;
+        panX = 0;
+        panY = 0;
+      }
+      applyTransform();
+      syncUI();
     });
 
     window.addEventListener("keydown", (event) => {
@@ -777,7 +860,6 @@
     warm(3);
     resetZoom();
     syncUI();
-    keepChromeVisible();
   </script>
 </body>
 </html>
