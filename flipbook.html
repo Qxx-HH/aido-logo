@@ -2,864 +2,238 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
-  <title>爱多电子画册</title>
+  <title>爱多电子画册预览</title>
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #0f1113;
-      --panel: rgba(18, 20, 23, 0.82);
-      --panel-strong: rgba(18, 20, 23, 0.96);
-      --line: rgba(255, 255, 255, 0.1);
-      --text: #f5f6f7;
-      --muted: rgba(245, 246, 247, 0.68);
-      --accent: #cb9a4e;
-      --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+      --bg: #efede7;
+      --surface: rgba(255, 255, 255, 0.94);
+      --text: #1f252c;
+      --muted: #6d7580;
+      --line: rgba(31, 37, 44, 0.08);
+      --accent: #0e4c97;
+      --gold: #c49042;
+      --shadow: 0 20px 48px rgba(31, 37, 44, 0.1);
     }
 
     * {
       box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
     }
 
-    html,
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at top, rgba(203, 154, 78, 0.14), transparent 22%),
-        linear-gradient(180deg, #17191c 0%, var(--bg) 100%);
       color: var(--text);
       font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(196, 144, 66, 0.16), transparent 24%),
+        linear-gradient(180deg, #f8f5ef 0%, var(--bg) 100%);
     }
 
-    body {
-      display: flex;
+    .wrap {
+      width: min(860px, 100%);
+      margin: 0 auto;
+      padding: 18px 12px 96px;
     }
 
-    .app {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      isolation: isolate;
-    }
-
-    .chrome {
-      position: absolute;
-      left: 0;
-      right: 0;
-      z-index: 8;
-      transition: opacity 180ms ease, transform 180ms ease;
-    }
-
-    .panel,
-    .nav-button {
-      transition: opacity 180ms ease, transform 180ms ease;
-    }
-
-    .app.is-immersive .chrome,
-    .app.is-immersive .panel,
-    .app.is-immersive .nav-button {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(10px);
-    }
-
-    .topbar-wrap {
-      top: 0;
-      padding: 12px 12px 0;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--panel);
-      backdrop-filter: blur(18px);
+    .hero {
+      border-radius: 26px;
+      background: linear-gradient(135deg, #0d4b97 0%, #143f78 52%, #1a2f4d 100%);
       box-shadow: var(--shadow);
-    }
-
-    .meta {
-      min-width: 0;
-    }
-
-    .eyebrow {
-      margin: 0 0 4px;
-      font-size: 11px;
-      line-height: 1;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-
-    .title {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.25;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .badge {
-      flex: none;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.07);
-      font-size: 12px;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .viewer {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 72px 10px 86px;
-      transition: padding 180ms ease;
-    }
-
-    .app.is-immersive .viewer {
-      padding: 0;
-    }
-
-    .stage {
-      position: relative;
-      width: min(100%, 1020px);
-      height: min(calc(100vh - 158px), calc(100vw * 0.684));
-      min-height: 320px;
-      border-radius: 22px;
-      overflow: hidden;
-      background: #0b0d10;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: var(--shadow);
-      transition: width 180ms ease, height 180ms ease, border-radius 180ms ease;
-    }
-
-    .app.is-immersive .stage {
-      width: 100%;
-      height: 100%;
-      border-radius: 0;
-      border: 0;
-    }
-
-    .viewport {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      background: #0d0f12;
-      touch-action: none;
-    }
-
-    .page-image {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transform:
-        translate(calc(-50% + var(--pan-x, 0px)), calc(-50% + var(--pan-y, 0px)))
-        scale(var(--zoom, 1));
-      transform-origin: center center;
-      opacity: 0;
-      transition: opacity 180ms ease;
-      will-change: transform, opacity;
-      pointer-events: none;
-    }
-
-    .page-image.is-visible {
-      opacity: 1;
-    }
-
-    .nav-button {
-      position: absolute;
-      top: 50%;
-      z-index: 6;
-      width: 42px;
-      height: 64px;
-      margin-top: -32px;
-      border: 0;
-      border-radius: 16px;
-      background: rgba(18, 20, 23, 0.42);
       color: #fff;
-      font-size: 24px;
-      line-height: 1;
-      backdrop-filter: blur(10px);
-    }
-
-    .nav-button:disabled {
-      opacity: 0.2;
-    }
-
-    .nav-button.left {
-      left: 12px;
-    }
-
-    .nav-button.right {
-      right: 12px;
-    }
-
-    .loading {
-      position: absolute;
-      left: 50%;
-      bottom: 18px;
-      z-index: 7;
-      transform: translateX(-50%);
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.56);
-      font-size: 12px;
-      color: #fff;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 150ms ease;
-    }
-
-    .loading.is-visible {
-      opacity: 1;
-    }
-
-    .toolbar-wrap {
-      bottom: 0;
-      padding: 0 12px 12px;
-    }
-
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--panel);
-      backdrop-filter: blur(18px);
-      box-shadow: var(--shadow);
-    }
-
-    .hint {
-      font-size: 12px;
-      line-height: 1.35;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .tool-buttons {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .chip {
-      appearance: none;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 999px;
-      min-width: 72px;
-      height: 36px;
-      padding: 0 14px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      font: inherit;
-    }
-
-    .chip:disabled {
-      opacity: 0.3;
-    }
-
-    .chip.strong {
-      background: rgba(203, 154, 78, 0.14);
-      border-color: rgba(203, 154, 78, 0.28);
-    }
-
-    .panel {
-      position: absolute;
-      left: 12px;
-      right: 12px;
-      bottom: 86px;
-      z-index: 9;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--panel-strong);
-      backdrop-filter: blur(18px);
-      box-shadow: var(--shadow);
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(10px);
-    }
-
-    .panel.is-open {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
-    .panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .panel-title {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .panel-note {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .slider-row {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .slider-row span {
-      font-size: 12px;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      margin: 0;
-      accent-color: var(--accent);
-    }
-
-    .thumb-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
-      gap: 10px;
-      max-height: min(48vh, 420px);
-      overflow: auto;
-      padding-right: 2px;
-    }
-
-    .thumb {
-      appearance: none;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
       overflow: hidden;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 0;
-      color: var(--text);
     }
 
-    .thumb.is-active {
-      border-color: rgba(203, 154, 78, 0.72);
-      box-shadow: 0 0 0 1px rgba(203, 154, 78, 0.28) inset;
+    .hero-card {
+      padding: 18px;
     }
 
-    .thumb img {
+    .hero-card img {
       display: block;
       width: 100%;
       height: auto;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
     }
 
-    .thumb span {
-      display: block;
-      padding: 6px 0 7px;
-      font-size: 11px;
-      text-align: center;
+    .hero-copy {
+      padding: 0 20px 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.76);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 40px);
+      line-height: 1.08;
+    }
+
+    .hero-copy p {
+      margin: 14px 0 0;
+      font-size: 15px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.82);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 15px;
+      color: #fff;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #d29f51 0%, #b88133 100%);
+    }
+
+    .note {
+      margin-top: 18px;
+      border-radius: 18px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.58);
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      font-size: 14px;
+      line-height: 1.8;
       color: var(--muted);
     }
 
-    @media (max-width: 720px) {
-      .hint {
-        display: none;
-      }
+    .pages {
+      display: grid;
+      gap: 16px;
+      margin-top: 18px;
+    }
 
-      .toolbar {
-        align-items: flex-start;
-        flex-direction: column;
-      }
+    .page-card {
+      border-radius: 22px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.56);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
 
-      .tool-buttons {
-        width: 100%;
-        justify-content: flex-start;
-      }
+    .page-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fff;
+    }
 
-      .toolbar-wrap,
-      .topbar-wrap,
-      .panel {
-        left: 10px;
-        right: 10px;
-      }
+    .page-meta {
+      padding: 12px 14px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
 
-      .stage {
-        width: 100%;
-        height: min(calc(100vh - 154px), calc(100vw * 0.7));
-        border-radius: 18px;
-      }
+    .floating {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
 
-      .nav-button {
-        width: 38px;
-        height: 56px;
-        margin-top: -28px;
-      }
+    .floating a {
+      min-height: 48px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 15px;
+      color: #fff;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      background: rgba(17,19,22,0.92);
+      backdrop-filter: blur(10px);
+    }
+
+    .floating a.primary {
+      background: linear-gradient(135deg, #0e4c97 0%, #173b67 100%);
     }
   </style>
 </head>
 <body>
-  <main class="app" id="app">
-    <div class="chrome topbar-wrap">
-      <div class="topbar">
-        <div class="meta">
-          <p class="eyebrow">AIDO</p>
-          <h1 class="title">爱多电子画册</h1>
-        </div>
-        <div class="badge" id="badge">1 / 40</div>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-card">
+        <img src="./mobile/page-01.jpg" alt="爱多电子画册封面">
       </div>
-    </div>
-
-    <section class="viewer">
-      <div class="stage" id="stage">
-        <div class="viewport" id="viewport">
-          <img class="page-image is-visible" id="currentImage" alt="爱多电子画册第 1 页">
-          <img class="page-image" id="nextImage" alt="">
+      <div class="hero-copy">
+        <p class="eyebrow">AIDO E-BROCHURE PREVIEW</p>
+        <h1>爱多电子画册预览</h1>
+        <p>当前页面为在线预览版，直接向下滑动即可查看产品内容，无需先下载 PDF。</p>
+        <div class="actions">
+          <a class="btn primary" href="#pages">开始查看内容</a>
+          <a class="btn" href="./aido-logo.pdf" target="_blank" rel="noopener">完整 PDF</a>
         </div>
-        <button class="nav-button left" id="prevButton" type="button" aria-label="上一页">&#8249;</button>
-        <button class="nav-button right" id="nextButton" type="button" aria-label="下一页">&#8250;</button>
-        <div class="loading" id="loading">加载中...</div>
       </div>
     </section>
 
-    <div class="panel" id="pagePanel">
-      <div class="panel-head">
-        <h2 class="panel-title">页码定位</h2>
-        <div class="panel-note" id="pagePanelNote">1 / 40</div>
-      </div>
-      <div class="slider-row">
-        <span>第 1 页</span>
-        <input id="scrubber" type="range" min="1" max="40" step="1" value="1">
-        <span id="scrubberValue">1 / 40</span>
-      </div>
+    <div class="note">
+      这是面向微信扫码客户的直接预览版本。页面会按需加载画册图片，打开后就能直接看产品内容；如需保存或转发完整版，再点击“完整 PDF”。
     </div>
 
-    <div class="panel" id="thumbPanel">
-      <div class="panel-head">
-        <h2 class="panel-title">缩略图</h2>
-        <div class="panel-note">点击任意页跳转</div>
-      </div>
-      <div class="thumb-grid" id="thumbGrid"></div>
-    </div>
-
-    <div class="chrome toolbar-wrap">
-      <div class="toolbar">
-        <div class="hint">点一下屏幕切换控件显示，双指捏合可放大缩小，左右滑动翻页。</div>
-        <div class="tool-buttons">
-          <button class="chip" id="pageButton" type="button">页码</button>
-          <button class="chip" id="thumbButton" type="button">缩略图</button>
-          <button class="chip" id="zoomOutButton" type="button">缩小</button>
-          <button class="chip strong" id="zoomInButton" type="button">放大</button>
-        </div>
-      </div>
-    </div>
+    <section class="pages" id="pages"></section>
   </main>
+
+  <div class="floating">
+    <a href="#pages">返回内容</a>
+    <a class="primary" href="./aido-logo.pdf" target="_blank" rel="noopener">完整 PDF</a>
+  </div>
 
   <script>
     const totalPages = 40;
-    const app = document.getElementById("app");
-    const stage = document.getElementById("stage");
-    const currentImage = document.getElementById("currentImage");
-    const nextImage = document.getElementById("nextImage");
-    const prevButton = document.getElementById("prevButton");
-    const nextButton = document.getElementById("nextButton");
-    const badge = document.getElementById("badge");
-    const loading = document.getElementById("loading");
-    const pageButton = document.getElementById("pageButton");
-    const thumbButton = document.getElementById("thumbButton");
-    const zoomInButton = document.getElementById("zoomInButton");
-    const zoomOutButton = document.getElementById("zoomOutButton");
-    const pagePanel = document.getElementById("pagePanel");
-    const thumbPanel = document.getElementById("thumbPanel");
-    const pagePanelNote = document.getElementById("pagePanelNote");
-    const scrubber = document.getElementById("scrubber");
-    const scrubberValue = document.getElementById("scrubberValue");
-    const thumbGrid = document.getElementById("thumbGrid");
-
-    const cache = new Map();
-    let page = 1;
-    let animating = false;
-    let openPanel = "";
-    let zoom = 1;
-    let panX = 0;
-    let panY = 0;
-    let swipeStartX = 0;
-    let swipeStartY = 0;
-    let swipeMoved = false;
-    let pinchStartDistance = 0;
-    let pinchStartZoom = 1;
-    let pinchStartCenterX = 0;
-    let pinchStartCenterY = 0;
-    let pinchBasePanX = 0;
-    let pinchBasePanY = 0;
-    let activeTouches = [];
+    const pagesEl = document.getElementById("pages");
 
     function pageSrc(n) {
       return `./mobile/page-${String(n).padStart(2, "0")}.jpg`;
     }
 
-    function thumbSrc(n) {
-      return `./thumbs/page-${String(n).padStart(2, "0")}.jpg`;
-    }
-
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
-    }
-
-    function toggleLoading(visible) {
-      loading.classList.toggle("is-visible", visible);
-    }
-
-    function warm(n) {
-      if (n < 1 || n > totalPages || cache.has(n)) return;
-      const img = new Image();
+    const fragment = document.createDocumentFragment();
+    for (let i = 1; i <= totalPages; i += 1) {
+      const card = document.createElement("article");
+      card.className = "page-card";
+      const img = document.createElement("img");
+      img.src = pageSrc(i);
+      img.alt = `爱多电子画册第 ${i} 页`;
+      img.loading = i <= 3 ? "eager" : "lazy";
       img.decoding = "async";
-      img.src = pageSrc(n);
-      cache.set(n, img);
+      const meta = document.createElement("div");
+      meta.className = "page-meta";
+      meta.textContent = `第 ${i} 页`;
+      card.append(img, meta);
+      fragment.append(card);
     }
-
-    function updateThumbActive() {
-      thumbGrid.querySelectorAll(".thumb").forEach((thumb) => {
-        thumb.classList.toggle("is-active", Number(thumb.dataset.page) === page);
-      });
-    }
-
-    function setPanel(name) {
-      openPanel = openPanel === name ? "" : name;
-      pagePanel.classList.toggle("is-open", openPanel === "page");
-      thumbPanel.classList.toggle("is-open", openPanel === "thumb");
-      app.classList.remove("is-immersive");
-    }
-
-    function closePanels() {
-      openPanel = "";
-      pagePanel.classList.remove("is-open");
-      thumbPanel.classList.remove("is-open");
-    }
-
-    function maxPanX() {
-      return ((zoom - 1) * stage.clientWidth) / 2;
-    }
-
-    function maxPanY() {
-      return ((zoom - 1) * stage.clientHeight) / 2;
-    }
-
-    function applyTransform() {
-      currentImage.style.setProperty("--zoom", String(zoom));
-      currentImage.style.setProperty("--pan-x", `${panX}px`);
-      currentImage.style.setProperty("--pan-y", `${panY}px`);
-      zoomOutButton.disabled = zoom <= 1;
-      zoomInButton.disabled = zoom >= 3;
-      if (zoom <= 1) {
-        panX = 0;
-        panY = 0;
-        currentImage.style.setProperty("--pan-x", "0px");
-        currentImage.style.setProperty("--pan-y", "0px");
-      }
-    }
-
-    function resetZoom() {
-      zoom = 1;
-      panX = 0;
-      panY = 0;
-      applyTransform();
-    }
-
-    function syncUI() {
-      badge.textContent = `${page} / ${totalPages}`;
-      pagePanelNote.textContent = `${page} / ${totalPages}`;
-      scrubber.value = String(page);
-      scrubberValue.textContent = `${page} / ${totalPages}`;
-      prevButton.disabled = page === 1 || animating || zoom > 1;
-      nextButton.disabled = page === totalPages || animating || zoom > 1;
-      pageButton.textContent = `页码 ${page}/${totalPages}`;
-      updateThumbActive();
-      zoomInButton.disabled = zoom >= 3;
-      zoomOutButton.disabled = zoom <= 1;
-    }
-
-    function finishChange(target) {
-      page = target;
-      currentImage.src = pageSrc(page);
-      currentImage.alt = `爱多电子画册第 ${page} 页`;
-      currentImage.className = "page-image is-visible";
-      nextImage.className = "page-image";
-      animating = false;
-      toggleLoading(false);
-      resetZoom();
-      warm(page - 1);
-      warm(page + 1);
-      warm(page + 2);
-      syncUI();
-    }
-
-    function go(target) {
-      if (animating || target < 1 || target > totalPages || target === page || zoom > 1) return;
-      animating = true;
-      closePanels();
-      toggleLoading(true);
-
-      const src = pageSrc(target);
-      const loader = cache.get(target) || new Image();
-      loader.decoding = "async";
-      loader.onload = () => {
-        nextImage.src = src;
-        nextImage.alt = `爱多电子画册第 ${target} 页`;
-        nextImage.className = "page-image is-visible";
-        currentImage.className = "page-image";
-        setTimeout(() => finishChange(target), 180);
-      };
-      loader.onerror = () => {
-        animating = false;
-        toggleLoading(false);
-        syncUI();
-      };
-
-      if (!cache.has(target)) {
-        cache.set(target, loader);
-        loader.src = src;
-      } else if (loader.complete) {
-        loader.onload();
-      }
-      syncUI();
-    }
-
-    function buildThumbs() {
-      const frag = document.createDocumentFragment();
-      for (let i = 1; i <= totalPages; i += 1) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "thumb";
-        button.dataset.page = String(i);
-        const img = document.createElement("img");
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.src = thumbSrc(i);
-        img.alt = `第 ${i} 页缩略图`;
-        const label = document.createElement("span");
-        label.textContent = `第 ${i} 页`;
-        button.append(img, label);
-        button.addEventListener("click", () => {
-          closePanels();
-          go(i);
-        });
-        frag.append(button);
-      }
-      thumbGrid.append(frag);
-    }
-
-    function getDistance(a, b) {
-      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-    }
-
-    function getCenter(a, b) {
-      return {
-        x: (a.clientX + b.clientX) / 2,
-        y: (a.clientY + b.clientY) / 2
-      };
-    }
-
-    pageButton.addEventListener("click", () => setPanel("page"));
-    thumbButton.addEventListener("click", () => setPanel("thumb"));
-    prevButton.addEventListener("click", () => go(page - 1));
-    nextButton.addEventListener("click", () => go(page + 1));
-    zoomInButton.addEventListener("click", () => {
-      zoom = clamp(Number((zoom + 0.35).toFixed(2)), 1, 3);
-      applyTransform();
-      syncUI();
-    });
-    zoomOutButton.addEventListener("click", () => {
-      zoom = clamp(Number((zoom - 0.35).toFixed(2)), 1, 3);
-      applyTransform();
-      syncUI();
-    });
-
-    scrubber.addEventListener("input", () => {
-      scrubberValue.textContent = `${scrubber.value} / ${totalPages}`;
-    });
-    scrubber.addEventListener("change", () => {
-      go(Number(scrubber.value));
-    });
-
-    stage.addEventListener("touchstart", (event) => {
-      activeTouches = Array.from(event.touches);
-      if (activeTouches.length === 1) {
-        const touch = activeTouches[0];
-        swipeStartX = touch.clientX;
-        swipeStartY = touch.clientY;
-        swipeMoved = false;
-      }
-      if (activeTouches.length === 2) {
-        const [a, b] = activeTouches;
-        pinchStartDistance = getDistance(a, b);
-        pinchStartZoom = zoom;
-        const center = getCenter(a, b);
-        pinchStartCenterX = center.x;
-        pinchStartCenterY = center.y;
-        pinchBasePanX = panX;
-        pinchBasePanY = panY;
-      }
-    }, { passive: true });
-
-    stage.addEventListener("touchmove", (event) => {
-      activeTouches = Array.from(event.touches);
-
-      if (activeTouches.length === 2) {
-        event.preventDefault();
-        const [a, b] = activeTouches;
-        const distance = getDistance(a, b);
-        const center = getCenter(a, b);
-        zoom = clamp(Number((pinchStartZoom * (distance / Math.max(pinchStartDistance, 1))).toFixed(3)), 1, 3);
-        panX = clamp(pinchBasePanX + (center.x - pinchStartCenterX), -maxPanX(), maxPanX());
-        panY = clamp(pinchBasePanY + (center.y - pinchStartCenterY), -maxPanY(), maxPanY());
-        applyTransform();
-        syncUI();
-        return;
-      }
-
-      if (activeTouches.length === 1 && zoom > 1) {
-        event.preventDefault();
-        const touch = activeTouches[0];
-        const dx = touch.clientX - swipeStartX;
-        const dy = touch.clientY - swipeStartY;
-        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
-          swipeMoved = true;
-        }
-        panX = clamp(pinchBasePanX + dx, -maxPanX(), maxPanX());
-        panY = clamp(pinchBasePanY + dy, -maxPanY(), maxPanY());
-        applyTransform();
-        syncUI();
-        return;
-      }
-
-      if (activeTouches.length === 1) {
-        const touch = activeTouches[0];
-        const dx = touch.clientX - swipeStartX;
-        const dy = touch.clientY - swipeStartY;
-        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-          swipeMoved = true;
-        }
-      }
-    }, { passive: false });
-
-    stage.addEventListener("touchend", (event) => {
-      const remaining = Array.from(event.touches);
-      if (remaining.length === 1) {
-        const touch = remaining[0];
-        swipeStartX = touch.clientX;
-        swipeStartY = touch.clientY;
-        pinchBasePanX = panX;
-        pinchBasePanY = panY;
-      }
-
-      if (event.changedTouches.length !== 1 || remaining.length > 0) {
-        activeTouches = remaining;
-        return;
-      }
-
-      const touch = event.changedTouches[0];
-      const dx = touch.clientX - swipeStartX;
-      const dy = touch.clientY - swipeStartY;
-      const absX = Math.abs(dx);
-      const absY = Math.abs(dy);
-
-      if (zoom > 1) {
-        activeTouches = remaining;
-        return;
-      }
-
-      if (absX > 42 && absX > absY) {
-        if (dx < 0) go(page + 1);
-        if (dx > 0) go(page - 1);
-        activeTouches = remaining;
-        return;
-      }
-
-      if (!swipeMoved && absX < 10 && absY < 10) {
-        closePanels();
-        app.classList.toggle("is-immersive");
-      }
-
-      activeTouches = remaining;
-    }, { passive: true });
-
-    stage.addEventListener("mousedown", (event) => {
-      if (event.button !== 0 || zoom > 1) return;
-      swipeStartX = event.clientX;
-      swipeStartY = event.clientY;
-      swipeMoved = false;
-    });
-
-    stage.addEventListener("mousemove", (event) => {
-      if ((event.buttons & 1) !== 1 || zoom > 1) return;
-      if (Math.abs(event.clientX - swipeStartX) > 8 || Math.abs(event.clientY - swipeStartY) > 8) {
-        swipeMoved = true;
-      }
-    });
-
-    stage.addEventListener("mouseup", (event) => {
-      if (zoom > 1) return;
-      const dx = event.clientX - swipeStartX;
-      const dy = event.clientY - swipeStartY;
-      const absX = Math.abs(dx);
-      const absY = Math.abs(dy);
-      if (absX > 42 && absX > absY) {
-        if (dx < 0) go(page + 1);
-        if (dx > 0) go(page - 1);
-        return;
-      }
-      if (!swipeMoved && absX < 6 && absY < 6) {
-        closePanels();
-        app.classList.toggle("is-immersive");
-      }
-    });
-
-    stage.addEventListener("dblclick", () => {
-      if (zoom === 1) {
-        zoom = 2;
-      } else {
-        zoom = 1;
-        panX = 0;
-        panY = 0;
-      }
-      applyTransform();
-      syncUI();
-    });
-
-    window.addEventListener("keydown", (event) => {
-      if (zoom > 1) return;
-      if (event.key === "ArrowLeft") go(page - 1);
-      if (event.key === "ArrowRight") go(page + 1);
-    });
-
-    currentImage.src = pageSrc(1);
-    buildThumbs();
-    warm(2);
-    warm(3);
-    resetZoom();
-    syncUI();
+    pagesEl.append(fragment);
   </script>
 </body>
 </html>
